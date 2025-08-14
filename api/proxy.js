@@ -1,14 +1,15 @@
-// Whitelisted proxy for Solscan + Meteora (and httpbin for testing)
-const ALLOWED_HOSTS = new Set([
-  "public-api.solscan.io",
-  "pro-api.solscan.io",
-  "api.solscan.io",
-  "solscan.io",
-  "meteora.ag",
-  "www.meteora.ag",
-  "api.meteora.ag",
-  "httpbin.org" // for quick GET testing
-]);
+// Proxy with wildcard host allow-list for Solscan & Meteora
+const ALLOW_SUFFIXES = [
+  "solscan.io",        // matches solscan.io and any subdomain like api-v2.solscan.io
+  "meteora.ag"         // matches meteora.ag and any subdomain like api.meteora.ag
+];
+
+function isAllowedHost(host) {
+  // exact match
+  if (ALLOW_SUFFIXES.includes(host)) return true;
+  // suffix match for subdomains
+  return ALLOW_SUFFIXES.some(suffix => host === suffix || host.endsWith("." + suffix));
+}
 
 const RATE_LIMIT_RPS = parseInt(process.env.RATE_LIMIT_RPS || "5", 10);
 // Simple per-instance token bucket
@@ -27,7 +28,7 @@ async function takeToken() {
   while (true) {
     refillTokens();
     if (tokens > 0) { tokens--; return; }
-    await new Promise(r => setTimeout(r, 100)); // wait 100ms
+    await new Promise(r => setTimeout(r, 100)); // 100ms
   }
 }
 
@@ -45,7 +46,8 @@ export default async function handler(req, res) {
       res.status(400).json({ error: "Invalid URL" });
       return;
     }
-    if (!ALLOWED_HOSTS.has(parsed.host)) {
+
+    if (!isAllowedHost(parsed.host)) {
       res.status(400).json({ error: `Host not allowed: ${parsed.host}` });
       return;
     }
@@ -55,19 +57,14 @@ export default async function handler(req, res) {
     // Prepare headers
     const upstreamHeaders = {
       "user-agent": "meteora-webapp-proxy/1.0",
-      // copy content-type for POST/PUT if provided
       ...(req.headers["content-type"] ? { "content-type": req.headers["content-type"] } : {}),
     };
 
-    // Inject Meteora headers if calling their hosts
-    const isMeteora = parsed.host.includes("meteora");
+    // Inject Meteora headers for any *.meteora.ag host
+    const isMeteora = parsed.host === "meteora.ag" || parsed.host.endsWith(".meteora.ag");
     if (isMeteora) {
-      if (process.env.METEORA_API_KEY) {
-        upstreamHeaders["x-api-key"] = process.env.METEORA_API_KEY;
-      }
-      if (process.env.UPSTREAM_REFERER) {
-        upstreamHeaders["referer"] = process.env.UPSTREAM_REFERER;
-      }
+      if (process.env.METEORA_API_KEY) upstreamHeaders["x-api-key"] = process.env.METEORA_API_KEY;
+      if (process.env.UPSTREAM_REFERER) upstreamHeaders["referer"] = process.env.UPSTREAM_REFERER;
     }
 
     const method = req.method || "GET";
@@ -83,7 +80,6 @@ export default async function handler(req, res) {
       redirect: "follow",
     });
 
-    // Forward status and headers (with safe CORS)
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -92,7 +88,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Try to stream JSON/text
     const contentType = upstreamResp.headers.get("content-type") || "";
     res.status(upstreamResp.status);
     if (contentType.includes("application/json")) {
