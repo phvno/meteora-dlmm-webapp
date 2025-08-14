@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Meteora DLMM Web App — Coming Soon</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; 
+             margin: 0; padding: 2rem; display: grid; place-items: center; min-height: 100vh; }
+      .card { max-width: 720px; width: 100%; border: 1px solid rgba(0,0,0,.1); border-radius: 16px; padding: 24px; }
+      h1 { margin: 0 0 0.25rem 0; font-size: 1.5rem; }
+      p { margin: 0.25rem 0 1rem 0; line-height: 1.5; }
+      code { background: rgba(127,127,127,.15); padding: 2px 6px; border-radius: 6px; }
+      .row { display: flex; gap: 12px; flex-wrap: wrap; }
+      a.button { text-decoration: none; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(0,0,0,.15); }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Meteora DLMM Web App</h1>
+      <p>Parity-first rebuild of the Chrome extension, deployed on Vercel. UI is coming soon.</p>
+      <div class="row">
+        <a class="button" href="/api/ping">Check API: /api/ping</a>
+      </div>
+      <p style="margin-top:1rem">If the API link returns JSON with <code>status: "ok"</code>, your project wiring is good.</p>
+    </div>
+  </body>
+</html>
