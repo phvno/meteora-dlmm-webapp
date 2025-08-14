@@ -8,12 +8,15 @@
       :root { color-scheme: light dark; }
       body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; 
              margin: 0; padding: 2rem; display: grid; place-items: center; min-height: 100vh; }
-      .card { max-width: 760px; width: 100%; border: 1px solid rgba(0,0,0,.1); border-radius: 16px; padding: 24px; }
+      .card { max-width: 820px; width: 100%; border: 1px solid rgba(0,0,0,.1); border-radius: 16px; padding: 24px; }
       h1 { margin: 0 0 0.25rem 0; font-size: 1.6rem; }
       p { margin: 0.25rem 0 1rem 0; line-height: 1.5; }
       code { background: rgba(127,127,127,.15); padding: 2px 6px; border-radius: 6px; }
-      .row { display: flex; gap: 12px; flex-wrap: wrap; }
+      .row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
       a.button { text-decoration: none; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(0,0,0,.15); }
+      input { padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(0,0,0,.2); width: 100%; }
+      .stack { display: grid; gap: 10px; }
+      .muted { opacity: .7; font-size: .9rem; }
     </style>
   </head>
   <body>
@@ -21,11 +24,25 @@
       <h1>Meteora DLMM Web App</h1>
       <p>Parity-first rebuild of the Chrome extension, deployed on Vercel. UI is coming soon.</p>
       <div class="row">
-        <a class="button" href="/api/ping">Check API (Node): /api/ping</a>
         <a class="button" href="/api/hello">Check API (Node): /api/hello</a>
-        <a class="button" href="/api/ping-edge">Check API (Edge): /api/ping-edge</a>
+        <a class="button" href="/api/ping">Check API (Node): /api/ping</a>
       </div>
-      <p style="margin-top:1rem">If any link returns JSON, your project wiring is good.</p>
+      <div class="stack">
+        <label for="proxyUrl">Test the proxy (whitelist: httpbin.org, solscan.io, meteora.ag)</label>
+        <input id="proxyUrl" value="https://httpbin.org/get" />
+        <div class="row">
+          <a class="button" id="proxyGo" href="#">Go via /api/proxy</a>
+        </div>
+        <p class="muted">If this returns JSON, the proxy works and server-side headers can be injected for Meteora/solscan.</p>
+      </div>
     </div>
+    <script>
+      document.getElementById("proxyGo").addEventListener("click", (e) => {
+        e.preventDefault();
+        const u = document.getElementById("proxyUrl").value;
+        if (!u) return;
+        window.location.href = "/api/proxy?url=" + encodeURIComponent(u);
+      });
+    </script>
   </body>
 </html>

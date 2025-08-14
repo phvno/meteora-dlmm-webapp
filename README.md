@@ -1,19 +1,26 @@
-# Meteora DLMM Web App (Parity First) — Bootstrap
+# Meteora DLMM Web App (Parity First) — Bootstrap + Proxy
 
-This repo hosts a minimal static homepage and a Vercel Serverless Function so you can confirm your Vercel wiring before building the real app.
+This repo hosts:
+- `index.html` — placeholder homepage
+- `api/hello.js` — basic Node function (test)
+- `api/proxy.js` — whitelisted proxy for Solscan & Meteora (and httpbin for testing)
+- (optional) `api/ping.js` — Node function showing env vars presence
 
-## Files
-- `index.html` — placeholder homepage with a link to `/api/ping`
-- `api/ping.js` — serverless function returning `{ status: "ok" }` and showing which env vars are set
+## Proxy usage
+Call:
+```
+/api/proxy?url=<ENCODED_UPSTREAM_URL>
+```
+Allowed hosts (whitelist): `public-api.solscan.io`, `pro-api.solscan.io`, `api.solscan.io`, `solscan.io`, `meteora.ag`, `www.meteora.ag`, `api.meteora.ag`, and `httpbin.org` for testing.
 
-## Deploy Steps (no CLI)
-1. Upload these files to your GitHub repo (root) via the web UI.
-2. In Vercel, open the project and trigger a redeploy (or it will auto-deploy on push).
-3. Visit the deployment URL and click **Check API: /api/ping**.
-   - You should see JSON with `"status":"ok"`.
-   - If `env.has_meteora_api_key` is `true` and `upstream_referer` shows a URL, your env vars are wired.
+The proxy injects:
+- `x-api-key` (from `METEORA_API_KEY`) and
+- `referer` (from `UPSTREAM_REFERER`)
+**only** when the URL host includes `meteora`.
+
+It also applies a simple rate-limit (`RATE_LIMIT_RPS`, default 5 req/s per serverless instance).
 
 ## Next
-Once confirmed, we will:
-- Add proxy routes under `/api/solscan/...` and `/api/meteora/...`.
-- Build the two parity UI tabs with table + CSV export.
+- Add UI tabs (PositionPnL, WalletPoolPnL)
+- Replace direct upstream calls with `/api/proxy?url=...`
+- Implement CSV export on the client
